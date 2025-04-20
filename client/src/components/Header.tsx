@@ -1,48 +1,56 @@
-import { useTheme } from "./ThemeProvider";
-import { DumbbellIcon } from "./ui/dumbbell-icon";
-import { SunIcon, MoonIcon, UserIcon } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { Button } from "./ui/button";
-import { Separator } from "./ui/separator";
+import { useState } from "react";
+import { Link } from "wouter";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Header() {
-  const { theme, setTheme } = useTheme();
-  const { language, toggleLanguage } = useLanguage();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-10 bg-background border-b border-border">
+    <header className="sticky top-0 z-50 bg-background border-b border-border shadow-sm">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center">
-          <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center mr-3">
-            <DumbbellIcon className="w-6 h-6 text-black dark:text-black" />
+        <div className="flex items-center space-x-3">
+          <div className="h-10 w-10 rounded-md bg-primary flex items-center justify-center">
+            <i className="fa-solid fa-dumbbell text-primary-foreground text-xl"></i>
           </div>
-          <h1 className="text-xl font-bold">FitnessBlueprint</h1>
+          <h1 className="font-heading font-bold text-xl hidden sm:block">Fitness Blueprint</h1>
         </div>
-        <div className="flex items-center space-x-4">
-          <Button
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            variant="ghost"
-            size="icon"
-            className="rounded-full"
-            aria-label="Toggle theme"
-          >
-            <MoonIcon className="h-5 w-5 hidden dark:block" />
-            <SunIcon className="h-5 w-5 block dark:hidden" />
-          </Button>
-          <Separator orientation="vertical" className="h-6" />
-          <Button
-            onClick={toggleLanguage}
-            variant="ghost"
-            className="px-3 py-1 text-sm font-medium"
-          >
-            {language === "en" ? "EN" : "عربي"}
-          </Button>
-          <Button className="bg-primary text-black font-medium rounded-full px-4 py-1.5 text-sm flex items-center">
-            <UserIcon className="w-4 h-4 mr-2" />
-            Sign In
-          </Button>
-        </div>
+        
+        <nav className="flex items-center">
+          <ul className="hidden md:flex items-center space-x-4">
+            <li><Link href="/" className="px-3 py-2 rounded-md hover:bg-muted transition">Home</Link></li>
+            <li><Link href="/plans" className="px-3 py-2 rounded-md hover:bg-muted transition">Plans</Link></li>
+            <li><Link href="/ai-trainer" className="px-3 py-2 rounded-md text-primary hover:text-primary-dark transition">AI Trainer</Link></li>
+            <li><Link href="/gallery" className="px-3 py-2 rounded-md hover:bg-muted transition">Gallery</Link></li>
+            <li><Link href="/contact" className="px-3 py-2 rounded-md hover:bg-muted transition">Contact</Link></li>
+          </ul>
+          
+          <div className="flex items-center ml-4">
+            <ThemeToggle />
+            
+            <button 
+              className="md:hidden ml-2 p-2 rounded-md bg-muted"
+              onClick={() => setMenuOpen(!menuOpen)}
+            >
+              <i className="fa-solid fa-bars"></i>
+            </button>
+          </div>
+        </nav>
       </div>
+      
+      {/* Mobile menu */}
+      {menuOpen && (
+        <div className="md:hidden bg-background border-t border-border">
+          <div className="container mx-auto px-4 py-2">
+            <ul className="space-y-2 py-2">
+              <li><Link href="/" className="block px-3 py-2 rounded-md hover:bg-muted transition">Home</Link></li>
+              <li><Link href="/plans" className="block px-3 py-2 rounded-md hover:bg-muted transition">Plans</Link></li>
+              <li><Link href="/ai-trainer" className="block px-3 py-2 rounded-md text-primary hover:text-primary-dark transition">AI Trainer</Link></li>
+              <li><Link href="/gallery" className="block px-3 py-2 rounded-md hover:bg-muted transition">Gallery</Link></li>
+              <li><Link href="/contact" className="block px-3 py-2 rounded-md hover:bg-muted transition">Contact</Link></li>
+            </ul>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
