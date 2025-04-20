@@ -219,7 +219,18 @@ export default function FitnessPlans() {
       <div className="flex flex-col gap-4 mb-6">
         <h2 className="font-heading font-bold text-2xl md:text-3xl">Training Plans</h2>
         
-        <Tabs defaultValue="upper-lower" className="w-full">
+        <Tabs 
+          defaultValue="upper-lower" 
+          className="w-full"
+          onValueChange={(value) => {
+            // Set the appropriate initial category based on the selected tab
+            if (value === "upper-lower") {
+              setActiveCategory("upper");
+            } else if (value === "push-pull") {
+              setActiveCategory("push");
+            }
+          }}
+        >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="upper-lower">Upper/Lower Split</TabsTrigger>
             <TabsTrigger value="push-pull">Push/Pull/Legs</TabsTrigger>
