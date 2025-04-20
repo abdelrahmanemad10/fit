@@ -52,19 +52,31 @@ app.use((req, res, next) => {
   // doesn't interfere with the other routes
   if (app.get("env") === "development") {
     await setupVite(app, server);
+    
+    // ALWAYS serve the app on port 5000 in development
+    // this serves both the API and the client.
+    // It is the only port that is not firewalled in Replit.
+    const port = 5000;
+    server.listen({
+      port,
+      host: "0.0.0.0",
+      reusePort: true,
+    }, () => {
+      log(`serving on port ${port}`);
+    });
   } else {
     serveStatic(app);
+    
+    // For Vercel deployment, we don't start the server manually
+    // Vercel will invoke the handler function directly
+    if (process.env.VERCEL !== "1") {
+      const port = process.env.PORT || 5000;
+      server.listen({
+        port: Number(port),
+        host: "0.0.0.0",
+      }, () => {
+        log(`serving on port ${port}`);
+      });
+    }
   }
-
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
 })();
