@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { apiRequest } from "./queryClient";
+import { cacheService, generateCacheKey } from "./cacheService";
 
 type Message = {
   role: "user" | "assistant";
@@ -25,15 +26,30 @@ export function useChat(options: UseChatOptions = {}) {
       const userMessage: Message = { role: "user", content };
       setMessages((prev) => [...prev, userMessage]);
 
-      // Make API request
-      const response = await apiRequest("POST", "/api/chat", {
-        message: content,
-        language,
-        history: messages,
-      });
+      // Check if response is in cache
+      const cacheKey = generateCacheKey(content, language, messages);
+      const cachedResponse = cacheService.get<{ reply: string }>(cacheKey);
 
-      // Get response data
-      const data = await response.json();
+      let data;
+      
+      if (cachedResponse) {
+        // Use cached response
+        console.log('Using cached response');
+        data = cachedResponse;
+      } else {
+        // Make API request
+        const response = await apiRequest("POST", "/api/chat", {
+          message: content,
+          language,
+          history: messages,
+        });
+
+        // Get response data
+        data = await response.json();
+        
+        // Store in cache (1 hour TTL)
+        cacheService.set(cacheKey, data);
+      }
 
       // Add AI response to messages
       const assistantMessage: Message = {

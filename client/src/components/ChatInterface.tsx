@@ -3,6 +3,7 @@ import { useChat } from "@/lib/gemini";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import PromptTemplates from "@/components/PromptTemplates";
 
 type Message = {
   role: "user" | "assistant";
@@ -140,6 +141,11 @@ export default function ChatInterface() {
           )}
           
           <div ref={messagesEndRef} />
+        </div>
+        
+        {/* Prompt Templates */}
+        <div className="px-4">
+          <PromptTemplates onSelectTemplate={(template) => setMessage(template)} />
         </div>
         
         {/* Input Form */}
