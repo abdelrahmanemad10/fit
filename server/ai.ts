@@ -25,38 +25,17 @@ export async function generateChatResponse(request: ChatRequest): Promise<string
     const { message, language, history } = request;
     const genAI = getGenerativeAI();
     
-    // For Gemini, we need to format the history correctly
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    // Use default Gemini model
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
     
-    // Create system instruction as the first message
+    // Create a simple prompt that includes the system instruction
     const systemInstruction = getSystemPrompt(language);
+    const fullPrompt = `${systemInstruction}\n\nUser question: ${message}`;
     
-    // Prepare conversation history
-    const formattedHistory = history.map(msg => ({
-      role: msg.role,
-      parts: [{ text: msg.content }],
-    }));
-    
-    // Start a chat
-    const chat = model.startChat({
-      history: formattedHistory,
-      generationConfig: {
-        maxOutputTokens: 1000,
-        temperature: 0.7,
-      },
-    });
-    
-    // Add system instruction as first message if not in history
-    if (history.length === 0) {
-      await chat.sendMessage(`System: ${systemInstruction}`);
-    }
-    
-    // Generate response
-    const result = await chat.sendMessage(message);
+    // For simple chat functionality, we'll use generateContent method directly
+    const result = await model.generateContent(fullPrompt);
     const response = result.response;
-    const text = response.text();
-    
-    return text;
+    return response.text();
   } catch (error) {
     console.error("Error generating AI response:", error);
     
