@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -333,9 +334,11 @@ export default function FitnessPlans() {
       </div>
       
       <div className="flex justify-center mt-8">
-        <Button variant="outline">
-          View All Exercises
-        </Button>
+        <Link href="/plans">
+          <Button variant="outline">
+            View All Exercises
+          </Button>
+        </Link>
       </div>
     </section>
   );
