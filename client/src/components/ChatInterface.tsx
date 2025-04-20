@@ -119,7 +119,11 @@ export default function ChatInterface() {
                 <span className="text-xs text-muted-foreground mb-1">
                   {msg.role === "user" ? (language === 'en' ? "You" : "أنت") : "AI Trainer"}
                 </span>
-                <p>{msg.content}</p>
+                <div className="prose prose-sm dark:prose-invert max-w-none" 
+                  dangerouslySetInnerHTML={{ 
+                    __html: msg.content.replace(/\n/g, '<br />') 
+                  }} 
+                />
               </div>
             ))
           )}
