@@ -83,12 +83,13 @@ class CacheService {
     const now = Date.now();
     let count = 0;
     
-    for (const [key, item] of this.cache.entries()) {
+    // Convert to array to avoid iterator issues
+    Array.from(this.cache.entries()).forEach(([key, item]) => {
       if (item.expiry < now) {
         this.cache.delete(key);
         count++;
       }
-    }
+    });
     
     return count;
   }
@@ -99,9 +100,10 @@ export const cacheService = new CacheService();
 
 // Generate a consistent cache key from request parameters
 export function generateCacheKey(message: string, language: string, history: any[]): string {
-  // Create a string representation of the history
-  const historyStr = history.map(msg => `${msg.role}:${msg.content}`).join('|');
+  // Create a string representation of the history - limit to last 3 messages to keep keys shorter
+  const recentHistory = history.slice(-3);
+  const historyStr = recentHistory.map(msg => `${msg.role}:${msg.content.substring(0, 50)}`).join('|');
   
-  // Combine all parameters into a single string and hash it
+  // Combine all parameters into a single string
   return `${message}-${language}-${historyStr}`;
 }
