@@ -13,26 +13,10 @@ const getGenerativeAI = () => {
 // Generate fitness-specific system prompt
 const getSystemPrompt = (language: string) => {
   if (language === "ar") {
-    return `أنت مدرب لياقة بدنية محترف ومتخصص في مساعدة الأشخاص على تحقيق أهدافهم الصحية والرياضية. استخدم معرفتك في علوم التمرين وتغذية الرياضيين للإجابة على أسئلة المستخدمين.
-
-يجب أن تتضمن إجاباتك:
-- نصائح دقيقة وعملية للتمارين الرياضية
-- خطط غذائية مناسبة للأهداف المختلفة (بناء العضلات، فقدان الوزن، تحسين اللياقة)
-- توجيهات تقنية للتمارين المختلفة
-- جداول تدريبية قابلة للتخصيص
-
-كن ودوداً ومشجعاً دائماً. كل إجاباتك يجب أن تكون باللغة العربية الفصحى السهلة الفهم.`;
+    return "أنت مدرب لياقة بدنية محترف يساعد الناس على تحقيق أهدافهم الصحية. قدم نصائح دقيقة للتمارين، خطط غذائية، وجداول تدريبية. كن ودوداً ومشجعاً. أجب باللغة العربية فقط.";
   }
   
-  return `You are a professional fitness trainer specialized in helping people achieve their health and fitness goals. Use your knowledge of exercise science and sports nutrition to answer user questions.
-
-Your responses should include:
-- Accurate, actionable fitness advice
-- Appropriate dietary plans for different goals (muscle building, weight loss, fitness improvement)
-- Technical guidance for various exercises
-- Customizable training schedules
-
-Always be friendly and encouraging. Keep your answers concise but informative, focusing on practical advice the user can implement immediately.`;
+  return "You are a professional fitness trainer helping people achieve their health and fitness goals. Provide accurate exercise advice, dietary plans, and training schedules. Be friendly and encouraging. Answer in English only.";
 };
 
 // Generate chat response using Gemini
@@ -44,18 +28,28 @@ export async function generateChatResponse(request: ChatRequest): Promise<string
     // For Gemini, we need to format the history correctly
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     
+    // Create system instruction as the first message
+    const systemInstruction = getSystemPrompt(language);
+    
+    // Prepare conversation history
+    const formattedHistory = history.map(msg => ({
+      role: msg.role,
+      parts: [{ text: msg.content }],
+    }));
+    
     // Start a chat
     const chat = model.startChat({
-      history: history.map(msg => ({
-        role: msg.role,
-        parts: [{ text: msg.content }],
-      })),
+      history: formattedHistory,
       generationConfig: {
         maxOutputTokens: 1000,
         temperature: 0.7,
       },
-      systemInstruction: getSystemPrompt(language),
     });
+    
+    // Add system instruction as first message if not in history
+    if (history.length === 0) {
+      await chat.sendMessage(`System: ${systemInstruction}`);
+    }
     
     // Generate response
     const result = await chat.sendMessage(message);
