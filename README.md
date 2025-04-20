@@ -31,9 +31,19 @@ A bilingual fitness web application with personalized workout plans and AI-power
    - In the project settings, add the following environment variable:
      - `GEMINI_API_KEY`: Your Google Gemini API key
 
-3. **Deploy**
+3. **Use Automatic Framework Detection**
+   - Let Vercel automatically detect the framework as Vite
+   - Vercel will handle the build command and output directory settings
+
+4. **Override Build Command (If Needed)**
+   - If Vercel fails to auto-detect settings, set these build settings:
+     - Build Command: `npm run build`
+     - Output Directory: `dist`
+     - Install Command: `npm install`
+
+5. **Deploy**
    - Click "Deploy"
-   - Vercel will automatically deploy your project
+   - Vercel will build and deploy your project
    - Once deployment is complete, you can access your site at the provided URL
 
 ## Local Development

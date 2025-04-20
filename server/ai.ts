@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { ChatRequest } from "@shared/types";
+import { serverCacheService, generateServerCacheKey } from "./cacheService";
 
 // Initialize Gemini API
 const getGenerativeAI = () => {
@@ -23,6 +24,18 @@ const getSystemPrompt = (language: string) => {
 export async function generateChatResponse(request: ChatRequest): Promise<string> {
   try {
     const { message, language, history } = request;
+    
+    // Generate cache key based on request
+    const cacheKey = generateServerCacheKey(message, language, history || []);
+    
+    // Check if we have a cached response
+    const cachedResponse = serverCacheService.get<string>(cacheKey);
+    if (cachedResponse) {
+      console.log('Using cached server response');
+      return cachedResponse;
+    }
+    
+    // No cache hit, generate new response
     const genAI = getGenerativeAI();
     
     // Use default Gemini model
@@ -35,7 +48,12 @@ export async function generateChatResponse(request: ChatRequest): Promise<string
     // For simple chat functionality, we'll use generateContent method directly
     const result = await model.generateContent(fullPrompt);
     const response = result.response;
-    return response.text();
+    const responseText = response.text();
+    
+    // Cache the response (2 hours TTL)
+    serverCacheService.set(cacheKey, responseText, 7200000);
+    
+    return responseText;
   } catch (error) {
     console.error("Error generating AI response:", error);
     

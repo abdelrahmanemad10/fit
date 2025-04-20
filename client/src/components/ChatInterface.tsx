@@ -4,10 +4,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import PromptTemplates from "@/components/PromptTemplates";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 
 type Message = {
   role: "user" | "assistant";
   content: string;
+  fromCache?: boolean;
 };
 
 export default function ChatInterface() {
@@ -22,7 +25,10 @@ export default function ChatInterface() {
     sendMessage,
     isLoading,
     error,
-    reset: resetChat
+    reset: resetChat,
+    clearCache,
+    toggleCache,
+    cacheStats
   } = useChat();
 
   // Handle form submission
@@ -60,6 +66,28 @@ export default function ChatInterface() {
     document.body.style.direction = e.target.value === "ar" ? "rtl" : "ltr";
   };
 
+  // Handle cache toggle
+  const handleCacheToggle = () => {
+    toggleCache();
+    
+    toast({
+      title: cacheStats.enabled ? "Cache Disabled" : "Cache Enabled",
+      description: cacheStats.enabled 
+        ? "All responses will come fresh from the API." 
+        : "Responses will be cached to improve performance.",
+    });
+  };
+
+  // Handle clear cache
+  const handleClearCache = () => {
+    clearCache();
+    
+    toast({
+      title: "Cache Cleared",
+      description: "All cached responses have been cleared.",
+    });
+  };
+
   // Scroll to bottom when messages update
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -84,16 +112,23 @@ export default function ChatInterface() {
         <div className="flex justify-between items-center p-4 border-b">
           <h3 className="font-bold text-lg">Chat with your AI Trainer</h3>
           
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-muted-foreground">Language:</span>
-            <select 
-              value={language}
-              onChange={handleLanguageChange}
-              className="bg-muted border-0 rounded py-1 px-2 text-sm focus:ring-1 focus:ring-primary"
-            >
-              <option value="en">English</option>
-              <option value="ar">العربية</option>
-            </select>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-muted-foreground">Language:</span>
+              <select 
+                value={language}
+                onChange={handleLanguageChange}
+                className="bg-muted border-0 rounded py-1 px-2 text-sm focus:ring-1 focus:ring-primary"
+              >
+                <option value="en">English</option>
+                <option value="ar">العربية</option>
+              </select>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-muted-foreground">Cache:</span>
+              <Switch checked={cacheStats.enabled} onCheckedChange={handleCacheToggle} />
+            </div>
           </div>
         </div>
         
@@ -117,9 +152,18 @@ export default function ChatInterface() {
                     : "bg-muted self-start message-in"
                 }`}
               >
-                <span className="text-xs text-muted-foreground mb-1">
-                  {msg.role === "user" ? (language === 'en' ? "You" : "أنت") : "AI Trainer"}
-                </span>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs text-muted-foreground">
+                    {msg.role === "user" ? (language === 'en' ? "You" : "أنت") : "AI Trainer"}
+                  </span>
+                  
+                  {msg.role === "assistant" && msg.fromCache && (
+                    <Badge variant="outline" className="text-xs px-1 py-0 h-4 ml-2 bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800">
+                      Cached
+                    </Badge>
+                  )}
+                </div>
+                
                 <div className="prose prose-sm dark:prose-invert max-w-none" 
                   dangerouslySetInnerHTML={{ 
                     __html: msg.content.replace(/\n/g, '<br />') 
@@ -169,16 +213,39 @@ export default function ChatInterface() {
             className="rounded-full flex-shrink-0"
             disabled={isLoading || !message.trim()}
           >
-            <i className="fa-solid fa-paper-plane"></i>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-send-horizontal">
+              <path d="m3 3 3 9-3 9 19-9Z"/>
+              <path d="M6 12h16"/>
+            </svg>
           </Button>
         </form>
         
-        {/* API Status */}
-        <div className="flex justify-between items-center px-4 pb-4 text-xs text-muted-foreground">
-          <div className="flex items-center space-x-1">
-            <span className={`inline-block w-2 h-2 rounded-full ${error ? "bg-red-500" : "bg-green-500"}`}></span>
-            <span>{error ? "API Disconnected" : "API Connected"}</span>
+        {/* API Status and Cache Controls */}
+        <div className="flex flex-wrap justify-between items-center px-4 pb-4 text-xs text-muted-foreground gap-2">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-1">
+              <span className={`inline-block w-2 h-2 rounded-full ${error ? "bg-red-500" : "bg-green-500"}`}></span>
+              <span>{error ? "API Disconnected" : "API Connected"}</span>
+            </div>
+            
+            <div className="flex items-center space-x-1">
+              <span className={`inline-block w-2 h-2 rounded-full ${cacheStats.enabled ? "bg-green-500" : "bg-gray-400"}`}></span>
+              <span>Cache: {cacheStats.enabled ? "On" : "Off"}</span>
+              <span>({cacheStats.size} items)</span>
+              
+              {cacheStats.size > 0 && (
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="text-xs h-6 px-2"
+                  onClick={handleClearCache}
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
           </div>
+          
           <div>
             Powered by Google Gemini
           </div>
